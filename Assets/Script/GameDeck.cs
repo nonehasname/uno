@@ -14,6 +14,10 @@ public class GameDeck : MonoBehaviour {
   private GameObject drawable_card_;
   private Vector3 lowest_deck_pos_;
   private Vector3 highest_deck_pos_;
+  private bool card_draw_in_progress_ = false;
+  private Vector3 draw_start_pos_, draw_end_pos_;
+  private float card_draw_lerp_ = 0.0f;
+  private float draw_speed_ = 2.5f;
 
   public float fullness_ = 1.0f;
   private const int kDeckThickness = 12;
@@ -27,6 +31,15 @@ public class GameDeck : MonoBehaviour {
     base_card_sprite_ = renderer_.sprite;
     InitializeCardSpriteStates();
     SetDeckFullness(1.0f);
+  }
+
+  void Update() {
+    HandleCardDraw();
+  }
+
+  public void DrawCard() {
+    // for now, draw card only for the main player
+    card_draw_in_progress_ = true;
   }
 
   // @def Update the deck sprite to reflect the fullness of the deck.
@@ -43,6 +56,31 @@ public class GameDeck : MonoBehaviour {
     Debug.Assert(selected_sprite != null);
     fullness_ = best_fullness;
     renderer_.sprite = selected_sprite;
+  }
+
+  private void HandleCardDraw() {
+    if (card_draw_in_progress_) {
+      Debug.Log("Card is drawing!");
+      if (draw_start_pos_ == Vector3.zero || draw_end_pos_ == Vector3.zero) {
+        card_draw_lerp_ = 0.0f;
+        drawable_card_.SetActive(true);
+        draw_start_pos_ = drawable_card_.transform.position;
+        draw_end_pos_ = drawable_card_.transform.position;
+        draw_end_pos_.y -= 6.0f;
+      } else if (card_draw_lerp_ != 1.0) {
+        drawable_card_.transform.position = Vector3.Lerp(draw_start_pos_, draw_end_pos_, card_draw_lerp_);
+        card_draw_lerp_ += Time.deltaTime * draw_speed_;
+        card_draw_lerp_ = Mathf.Clamp(card_draw_lerp_, 0.0f, 1.0f);
+      } else {
+        // card draw is done
+        drawable_card_.SetActive(false);
+        drawable_card_.transform.position = draw_start_pos_;
+        card_draw_in_progress_ = false;
+
+        draw_start_pos_ = Vector3.zero;
+        draw_end_pos_ = Vector3.zero;
+      }
+    }
   }
 
   // @desc Create different sprites for the card deck depending on how
