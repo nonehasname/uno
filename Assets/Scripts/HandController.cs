@@ -20,12 +20,10 @@ public class HandController : MonoBehaviour {
 
   private Transform selectedCard_;
 
-  private bool frameWait;
 
   // Start is called before the first frame update
   void Start() {
     handLayout = transform;
-    frameWait = false;
 
     cardWidth = cardPrefab.transform.GetComponent<RectTransform>().rect.width; //handLayout * cardPrefab.transform.width
     cardHeight = cardPrefab.transform.GetComponent<RectTransform>().rect.height;
@@ -34,22 +32,42 @@ public class HandController : MonoBehaviour {
 
   // Update is called once per frame
   void Update() {
-    //we wait one frame before disabling the grid layout so that it could space them out properly
-    if (frameWait) {
-      frameWait = false;
-    } else {
-      //disable the gridlayout so that horizontal spacing is done automatically and we can still move cards vertically
-      GetComponent<GridLayoutGroup>().enabled = false;
-    }
+
+
 
   }
 
   //currently only draws cards visually
   public void DrawCard() {
-    //Instantiate a new card under the handlayout
+    //Calculate positions of current cards based on the new amount of cards
+    int newCardCount = handLayout.childCount + 1; //newest card count
+
+
+    float spacingIncrement = 0.0f;
+
+    float leftEdge = -(newCardCount - 1) * 0.5f * cardWidth;
+
+    if (newCardCount * cardWidth > handWidth) {
+      spacingIncrement = cardWidth - ((cardWidth * newCardCount - handWidth) / newCardCount); 
+
+      leftEdge = -handWidth / 2.0f + cardWidth * 0.5f;
+    } else {
+      spacingIncrement = cardWidth;
+    }
+
+    //Each existing card will be moved to their new positions
+    foreach(Transform child in handLayout){
+        
+        child.GetComponent<Card>().SetCardPosition(leftEdge);
+        leftEdge+= spacingIncrement;
+    }
+
+    //Add the new card
     GameObject drawnCard = Instantiate(cardPrefab, handLayout);
-    drawnCard.transform.GetComponent<Card>().SetHandController(handLayout.GetComponent<HandController>());
-    UpdateCardSpacing();
+    drawnCard.transform.localPosition = new Vector3(leftEdge, -cardHeight * 1.5f, 0.0f);
+    drawnCard.transform.GetComponent<Card>().SetCardPosition(leftEdge);
+    cardCount = newCardCount;
+    
   }
 
   //ideally a drag and drop but will just use a play card button to play currently selected card
@@ -63,14 +81,29 @@ public class HandController : MonoBehaviour {
 
   //This occurs when a card is drawn or a card is played
   public void UpdateCardSpacing() {
-    GetComponent<GridLayoutGroup>().enabled = true;
-    frameWait = true;
-    cardCount = handLayout.childCount;
+
+    cardCount = handLayout.childCount; //newest card count
+
+    float spacingIncrement = 0.0f;
+
+    float leftEdge = -(cardCount - 1) * 0.5f * cardWidth;
+
     if (cardCount * cardWidth > handWidth) {
-      GetComponent<GridLayoutGroup>().spacing = new Vector2(-(cardWidth * cardCount - handWidth) / cardCount, 0.0f);
+      spacingIncrement = cardWidth - ((cardWidth * cardCount - handWidth) / cardCount); 
+
+      leftEdge = -handWidth / 2.0f + cardWidth * 0.5f;
     } else {
-      GetComponent<GridLayoutGroup>().spacing = new Vector2(0.0f, 0.0f);
+      spacingIncrement = cardWidth;
     }
+
+    foreach(Transform child in handLayout){
+
+        child.GetComponent<Card>().SetCardPosition(leftEdge);
+
+        leftEdge+= spacingIncrement;
+    }
+
+
   }
 
 }
