@@ -13,7 +13,13 @@ public class Card : MonoBehaviour {
   private bool selecting_card_ = false;
   private float draw_speed_ = 5.0f;
 
+  // draw the card into the deck the first time it is
+  // instantiated.
+  private bool start_draw_card_ = true;
+  private float start_draw_card_lerp_ = 0.0f;
+
   void Start() {
+    // gameObject.SetActive(false);
     button = GetComponent<Button>();
     button.onClick.AddListener(SelectCard);
 
@@ -21,9 +27,12 @@ public class Card : MonoBehaviour {
     deselected_position_y_ = transform.position.y;
     selected_position_y_ = transform.position.y;
     selected_position_y_ += 1.4f * card_height;
+
+    transform.position = CreateDrawStartPosition();
   }
 
   void Update() {
+    HandleInitCardDraw();
     HandleCardSelection();
   }
 
@@ -49,9 +58,30 @@ public class Card : MonoBehaviour {
     );
   }
 
+  private void HandleInitCardDraw() {
+    if (!start_draw_card_) return;
+    if (start_draw_card_lerp_ == 0.0f) {
+      transform.position = CreateDrawStartPosition();
+      gameObject.SetActive(true);
+    } else {
+      if (start_draw_card_lerp_ == 1.0f) {
+        start_draw_card_ = false;
+      } else {
+        Vector3 start = CreateDrawStartPosition();
+        Vector3 end = CreateDeselectedVectorPosition();
+        transform.position = Vector3.Lerp(start, end, start_draw_card_lerp_);
+      }
+    }
+
+    start_draw_card_lerp_ = Mathf.Clamp(
+      start_draw_card_lerp_ + Time.deltaTime * draw_speed_,
+      0.0f, 1.0f);
+  }
+
   private void HandleCardSelection() {
     if (selecting_card_) {
       if (select_lerp_ == 1.0f) return;
+      if (start_draw_card_) start_draw_card_ = false;
       Vector3 start = CreateDeselectedVectorPosition();
       Vector3 end = CreateSelectedVectorPosition();
 
@@ -59,6 +89,7 @@ public class Card : MonoBehaviour {
       select_lerp_ = Mathf.Clamp(select_lerp_ + draw_speed_ * Time.deltaTime, 0.0f, 1.0f);
     } else {
       if (select_lerp_ == 0.0f) return;
+      if (start_draw_card_) start_draw_card_ = false;
       Vector3 start = CreateSelectedVectorPosition();
       Vector3 end = CreateDeselectedVectorPosition();
 
@@ -79,6 +110,14 @@ public class Card : MonoBehaviour {
     return new Vector3(
       transform.position.x,
       deselected_position_y_,
+      transform.position.z
+    );
+  }
+
+  private Vector3 CreateDrawStartPosition() {
+    return new Vector3(
+      transform.position.x,
+      transform.position.y - 2.0f,
       transform.position.z
     );
   }
