@@ -60,7 +60,6 @@ public class GameDeck : MonoBehaviour {
 
   private void HandleCardDraw() {
     if (card_draw_in_progress_) {
-      Debug.Log("Card is drawing!");
       if (draw_start_pos_ == Vector3.zero || draw_end_pos_ == Vector3.zero) {
         card_draw_lerp_ = 0.0f;
         drawable_card_.SetActive(true);
