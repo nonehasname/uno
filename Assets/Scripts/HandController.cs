@@ -4,20 +4,13 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class HandController : MonoBehaviour {
-
   private Transform handLayout;
-
   private float cardCount;
-
   private const float maxHandWidth = 6.0f; //the max number of cards before we start overlapping cards
   private float cardWidth;
-
   private float cardHeight;
-
   private float handWidth; //the calculated max hand width
-
   public GameObject cardPrefab;
-
   private Transform selectedCard_;
 
 
@@ -25,17 +18,14 @@ public class HandController : MonoBehaviour {
   void Start() {
     handLayout = transform;
 
-    cardWidth = cardPrefab.transform.GetComponent<RectTransform>().rect.width; //handLayout * cardPrefab.transform.width
+    Debug.Assert(cardPrefab != null);
+    cardWidth = cardPrefab.transform.GetComponent<RectTransform>().rect.width;
     cardHeight = cardPrefab.transform.GetComponent<RectTransform>().rect.height;
     handWidth = maxHandWidth * cardWidth;
   }
 
   // Update is called once per frame
-  void Update() {
-
-
-
-  }
+  void Update() { }
 
   //currently only draws cards visually
   public void DrawCard() {
@@ -48,7 +38,7 @@ public class HandController : MonoBehaviour {
     float leftEdge = -(newCardCount - 1) * 0.5f * cardWidth;
 
     if (newCardCount * cardWidth > handWidth) {
-      spacingIncrement = cardWidth - ((cardWidth * newCardCount - handWidth) / newCardCount); 
+      spacingIncrement = cardWidth - ((cardWidth * newCardCount - handWidth) / newCardCount);
 
       leftEdge = -handWidth / 2.0f + cardWidth * 0.5f;
     } else {
@@ -56,10 +46,10 @@ public class HandController : MonoBehaviour {
     }
 
     //Each existing card will be moved to their new positions
-    foreach(Transform child in handLayout){
-        
-        child.GetComponent<Card>().SetCardPosition(leftEdge);
-        leftEdge+= spacingIncrement;
+    foreach (Transform child in handLayout) {
+
+      child.GetComponent<Card>().SetCardPosition(leftEdge);
+      leftEdge += spacingIncrement;
     }
 
     //Add the new card
@@ -67,7 +57,7 @@ public class HandController : MonoBehaviour {
     drawnCard.transform.localPosition = new Vector3(leftEdge, -cardHeight * 1.5f, 0.0f);
     drawnCard.transform.GetComponent<Card>().SetCardPosition(leftEdge);
     cardCount = newCardCount;
-    
+
   }
 
   //ideally a drag and drop but will just use a play card button to play currently selected card
@@ -83,24 +73,19 @@ public class HandController : MonoBehaviour {
   public void UpdateCardSpacing() {
 
     cardCount = handLayout.childCount; //newest card count
-
     float spacingIncrement = 0.0f;
-
     float leftEdge = -(cardCount - 1) * 0.5f * cardWidth;
 
     if (cardCount * cardWidth > handWidth) {
-      spacingIncrement = cardWidth - ((cardWidth * cardCount - handWidth) / cardCount); 
-
+      spacingIncrement = cardWidth - ((cardWidth * cardCount - handWidth) / cardCount);
       leftEdge = -handWidth / 2.0f + cardWidth * 0.5f;
     } else {
       spacingIncrement = cardWidth;
     }
 
-    foreach(Transform child in handLayout){
-
-        child.GetComponent<Card>().SetCardPosition(leftEdge);
-
-        leftEdge+= spacingIncrement;
+    foreach (Transform child in handLayout) {
+      child.GetComponent<Card>().SetCardPosition(leftEdge);
+      leftEdge += spacingIncrement;
     }
 
 
