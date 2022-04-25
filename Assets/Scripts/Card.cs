@@ -26,9 +26,11 @@ public class Card : MonoBehaviour {
   private float end_rearrange_position_x_;
 
   private Transform display_image;
+  private CardGenerator.CardInfo card_info_;
 
   void Start() {
-    // gameObject.SetActive(false);
+    SetToRandomCard();
+
     button = GetComponent<Button>();
     button.onClick.AddListener(SelectCard);
 
@@ -38,7 +40,6 @@ public class Card : MonoBehaviour {
     deselected_position_y_ = 0.0f;//transform.localPosition.y;
 
     selected_position_y_ = 0.4f * card_height;
-
   }
 
   void Update() {
@@ -51,15 +52,17 @@ public class Card : MonoBehaviour {
     handControl_ = newController;
   }
   public void SelectCard() {
-
     selecting_card_ = true;
-
   }
 
   public void DeselectCard() {
-
     selecting_card_ = false;
+  }
 
+  private void SetToRandomCard() {
+    card_info_ = CardGenerator.GetSingleton().GenerateRandomCard();
+    button = GetComponent<Button>();
+    button.image.sprite = card_info_.cardSprite;
   }
 
   public void PlayCard(){
@@ -72,9 +75,9 @@ public class Card : MonoBehaviour {
   private void HandleInitCardDraw() {
     if (!start_draw_card_) return;
     if (start_draw_card_lerp_ == 0.0f) {
-      
+
       //new cards do need to be set horizontally using rearrange
-      start_card_rearrange_ = false; 
+      start_card_rearrange_ = false;
 
       transform.localPosition = CreateDrawStartPosition();
       gameObject.SetActive(true);
@@ -85,11 +88,10 @@ public class Card : MonoBehaviour {
       } else {
         Vector3 start = CreateDrawStartPosition();
         Vector3 end = CreateDeselectedVectorPosition();
-        
+
         Vector3 newPosition = transform.localPosition;
         newPosition = Vector3.Lerp(start, end, start_draw_card_lerp_);
         transform.localPosition = newPosition;
-      
       }
     }
 
@@ -98,11 +100,10 @@ public class Card : MonoBehaviour {
       0.0f, 1.0f);
   }
 
-  private void HandleCardRearrange(){
+  private void HandleCardRearrange() {
+    if (start_card_rearrange_) {
 
-    if (start_card_rearrange_){
-
-      if (start_card_rearrange_lerp_ == 1.0f){
+      if (start_card_rearrange_lerp_ == 1.0f) {
         start_card_rearrange_ = false;
 
       }
@@ -114,7 +115,6 @@ public class Card : MonoBehaviour {
       start_card_rearrange_lerp_ = Mathf.Clamp(start_card_rearrange_lerp_ + draw_speed_ * Time.deltaTime, 0.0f, 1.0f);
     }
   }
-
 
   private void HandleCardSelection() {
     if (selecting_card_) {
@@ -186,10 +186,7 @@ public class Card : MonoBehaviour {
     );
   }
 
-
-
-
-  public void SetCardPosition(float xPosition){
+  public void SetCardPosition(float xPosition) {
     start_rearrange_position_x_ = transform.localPosition.x;
     end_rearrange_position_x_ = xPosition;
     start_card_rearrange_ = true;
