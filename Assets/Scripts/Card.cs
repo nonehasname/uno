@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class Card : MonoBehaviour {
 
   private Button button;
-  //private HandController handControl_;
+  private HandController handControl_;
   private float selected_position_y_;
   private float deselected_position_y_;
   private float select_lerp_ = 0.0f;
@@ -25,6 +25,7 @@ public class Card : MonoBehaviour {
   private float start_rearrange_position_x_;
   private float end_rearrange_position_x_;
 
+  private Transform display_image;
   private CardGenerator.CardInfo card_info_;
 
   void Start() {
@@ -32,6 +33,8 @@ public class Card : MonoBehaviour {
 
     button = GetComponent<Button>();
     button.onClick.AddListener(SelectCard);
+
+    display_image = transform.Find("Display Image");
 
     float card_height = GetComponent<RectTransform>().rect.height;
     deselected_position_y_ = 0.0f;//transform.localPosition.y;
@@ -45,7 +48,9 @@ public class Card : MonoBehaviour {
     HandleCardRearrange();
   }
 
-
+  public void SetHandController(HandController newController) {
+    handControl_ = newController;
+  }
   public void SelectCard() {
     selecting_card_ = true;
   }
@@ -58,6 +63,13 @@ public class Card : MonoBehaviour {
     card_info_ = CardGenerator.GetSingleton().GenerateRandomCard();
     button = GetComponent<Button>();
     button.image.sprite = card_info_.cardSprite;
+  }
+
+  public void PlayCard(){
+    if (selecting_card_){
+      handControl_.RemoveCard(transform);
+    } 
+
   }
 
   private void HandleInitCardDraw() {
@@ -93,6 +105,7 @@ public class Card : MonoBehaviour {
 
       if (start_card_rearrange_lerp_ == 1.0f) {
         start_card_rearrange_ = false;
+
       }
 
       Vector3 newPosition = transform.localPosition;
@@ -106,19 +119,43 @@ public class Card : MonoBehaviour {
   private void HandleCardSelection() {
     if (selecting_card_) {
       //if (select_lerp_ == 1.0f) return;
-      if (start_draw_card_) start_draw_card_ = false;
-      Vector3 start = CreateDeselectedVectorPosition();
-      Vector3 end = CreateSelectedVectorPosition();
+      if (start_draw_card_){ //if card draw was in process, complete that animation automatically
+        start_draw_card_ = false;
+        transform.localPosition = CreateDeselectedVectorPosition();
+      }
+      float start = deselected_position_y_;//CreateDeselectedVectorPosition();
+      float end = selected_position_y_;//CreateSelectedVectorPosition();
 
-      transform.localPosition = Vector3.Lerp(start, end, select_lerp_);
+      float originalCardHeight = display_image.GetComponent<RectTransform>().sizeDelta.y;
+      Vector2 boxSize =  transform.GetComponent<RectTransform>().sizeDelta;
+      
+      boxSize.y = Mathf.Lerp(originalCardHeight, originalCardHeight * 1.4f, select_lerp_); 
+      transform.GetComponent<RectTransform>().sizeDelta = boxSize;
+
+      float boxDiff = (boxSize.y - originalCardHeight) / 2.0f;
+      transform.localPosition = new Vector3(transform.localPosition.x, boxDiff , transform.localPosition.z);
+
+      display_image.localPosition = new Vector3(0.0f, Mathf.Lerp(start, end, select_lerp_) - boxDiff , 0.0f);
+
       select_lerp_ = Mathf.Clamp(select_lerp_ + draw_speed_ * Time.deltaTime, 0.0f, 1.0f);
     } else {
       //if (select_lerp_ == 0.0f) return;
       if (start_draw_card_) return;//start_draw_card_ = false;
-      Vector3 start = CreateSelectedVectorPosition();
-      Vector3 end = CreateDeselectedVectorPosition();
+      float start = selected_position_y_;
+      float end = deselected_position_y_;
 
-      transform.localPosition = Vector3.Lerp(start, end, 1 - select_lerp_);
+      float originalCardHeight = display_image.GetComponent<RectTransform>().sizeDelta.y;
+      Vector2 boxSize =  transform.GetComponent<RectTransform>().sizeDelta;
+
+      boxSize.y = Mathf.Lerp(originalCardHeight, originalCardHeight * 1.4f, select_lerp_); 
+      transform.GetComponent<RectTransform>().sizeDelta = boxSize;
+
+      float boxDiff = ( boxSize.y - originalCardHeight) / 2.0f;
+      transform.localPosition = new Vector3(transform.localPosition.x, boxDiff , transform.localPosition.z);
+
+      //transform.localPosition = Vector3.Lerp(start, end, 1 - select_lerp_);
+      display_image.localPosition = new Vector3(0.0f, Mathf.Lerp(start, end, 1 - select_lerp_) - boxDiff, 0.0f);
+
       select_lerp_ = Mathf.Clamp(select_lerp_ - draw_speed_ * Time.deltaTime, 0.0f, 1.0f);
     }
   }

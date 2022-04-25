@@ -56,6 +56,7 @@ public class HandController : MonoBehaviour {
     GameObject drawnCard = Instantiate(cardPrefab, handLayout);
     drawnCard.transform.localPosition = new Vector3(leftEdge, -cardHeight * 1.5f, 0.0f);
     drawnCard.transform.GetComponent<Card>().SetCardPosition(leftEdge);
+    drawnCard.transform.GetComponent<Card>().SetHandController(handLayout.GetComponent<HandController>());
     cardCount = newCardCount;
 
   }
@@ -67,6 +68,38 @@ public class HandController : MonoBehaviour {
       selectedCard_ = null;
       UpdateCardSpacing();
     }
+  }
+
+  public void RemoveCard(Transform removedCard){
+    //Calculate positions of current cards based on the new amount of cards
+    int newCardCount = handLayout.childCount - 1; //newest card count
+
+
+    float spacingIncrement = 0.0f;
+
+    float leftEdge = -(newCardCount - 1) * 0.5f * cardWidth;
+
+    if (newCardCount * cardWidth > handWidth) {
+      spacingIncrement = cardWidth - ((cardWidth * newCardCount - handWidth) / newCardCount); 
+
+      leftEdge = -handWidth / 2.0f + cardWidth * 0.5f;
+    } else {
+      spacingIncrement = cardWidth;
+    }
+
+    Destroy(removedCard.gameObject);
+
+    //Each existing card will be moved to their new positions
+    foreach(Transform child in handLayout){
+        
+
+        if (child != removedCard){
+          child.GetComponent<Card>().SetCardPosition(leftEdge);
+          leftEdge+= spacingIncrement;
+        }
+    }
+
+    cardCount = newCardCount;
   }
 
   //This occurs when a card is drawn or a card is played
